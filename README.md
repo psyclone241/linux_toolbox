@@ -1,7 +1,7 @@
 linux_toolbox
 ===========
 
-Linux Toolbox for CTS-IT
+Linux Toolbox
 -----------------------------
 
 A collection of tools for administering various linux boxen
