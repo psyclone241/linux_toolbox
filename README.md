@@ -14,7 +14,7 @@ Installation
 * Currently no formal install process, simply setup VirtualEnv or run manually
 * Follow these steps to setup your virtualenv
     * `virtualenv venv`
-    * venv/bin/pip install -r requirements.txt
+    * `venv/bin/pip install -r requirements.txt`
 * Or install manually with `pip install -r requirements.txt`
 
 Package Contents
