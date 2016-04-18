@@ -16,15 +16,18 @@ Installation
     * `virtualenv venv`
     * `venv/bin/pip install -r requirements.txt`
 * Or install manually with `pip install -r requirements.txt`
+* Or use `make setup`
 
 Package Contents
 ----------------
 
-* Nothing is installed at this time
+* Nothing is installed at this time,
 
 Usage Instructions
 ------------------
 
+* To copy the config example, run `make config`
+* To install the virtualenv environment, run `make setup`
 * Manually run, `python processwatch.py`
 * Or, use make, `make watch`
 
