@@ -15,6 +15,10 @@ class ProcessWatch:
             config = ConfigParser.ConfigParser()
             if os.path.exists('config.ini'):
                 config.read("config.ini")
+                config_data = {}
+                config_data['database_file'] = config.get('GeneralSettings', 'DatabaseFile')
+                config_data['max_in_list'] = config.get('GeneralSettings', 'MaxInList')
+                config_data['cpu_percent_interval'] = config.get('GeneralSettings', 'CPUPercentInterval')
             else:
                 raise Exception('No config.ini file was found')
         except Exception, e:
@@ -27,12 +31,31 @@ class ProcessWatch:
             self.process_list = None
             self.stored_process_list = {}
             self.scorecard = []
-            self.max_in_list = 5
-            self.cpu_percent_interval = .25
-            self.cpu_percent_percpu = True
-            self.database_file = 'processwatch.db'
+
+            if config_data['max_in_list']:
+                self.max_in_list = int(config_data['max_in_list'])
+                if self.max_in_list < 0 or self.max_in_list > 50:
+                    self.max_in_list = 5
+            else:
+                self.max_in_list = 5
+
+
+            if config_data['cpu_percent_interval']:
+                self.cpu_percent_interval = float(config_data['cpu_percent_interval'])
+                if self.cpu_percent_interval < 0 or self.cpu_percent_interval > 5:
+                    self.cpu_percent_interval = .25
+            else:
+                self.cpu_percent_interval = .25
+
+
+            if config_data['database_file']:
+                self.database_file = config_data['database_file']
+            else:
+                self.database_file = 'processwatch.db'
+                
             self.process_table = 'processwatch'
             self.create_table_columns = '(id INTEGER PRIMARY KEY, rss BIGINT, cpu_percent BIGINT, pid INT, ppid INT, username TEXT, name TEXT, cmdline TEXT, rank INT, create_time TEXT, run_as TEXT, timestamp TEXT)'
+
             self.abs_round_memory_format = '%3.1f%s%s'
             self.other_round_memory_format = '%.1f%s%s'
             self.timestamp_format = '%Y-%m-%d %H:%M:%S'
