@@ -44,8 +44,10 @@ Output data
 Requirements
 ------------
 
+* Python package python-dev
+    * `apt-get install python-dev`
 * Python library 'psutil'
-* `pip install psutil`
+    * `pip install psutil`
 
 Contributions
 -------------
