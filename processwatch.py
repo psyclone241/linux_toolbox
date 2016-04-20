@@ -21,7 +21,7 @@ class ProcessWatch:
         # self.arg_parser.add_argument(
         #     "-m", "--method_to_use", help="Which method to use?", default='run_command')
         self.arg_parser.add_argument(
-            "-q", "--quiet", help="Prevents output to the screen", action="store_true", default=True)
+            "-q", "--quiet", help="Prevents output to the screen", action="store_true", default=False)
 
         self.args = self.arg_parser.parse_args()
 
