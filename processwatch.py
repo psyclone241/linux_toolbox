@@ -128,7 +128,8 @@ class ProcessWatch:
         self.scoreProcessList()
 
     def sendToTerminal(self, message):
-        print(message)
+        if not self.quiet:
+            print(message)
 
     def sizeOf(self, num, suffix='b'):
         try:
