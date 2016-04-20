@@ -164,7 +164,7 @@ class ProcessWatch:
             else:
                     screen_message = "Error in DB: {:s}".format((error_message))
                     self.sendToTerminal(screen_message)
-                exit()
+                    exit()
         finally:
             if self.database_connection:
                 self.database_connection.close()
