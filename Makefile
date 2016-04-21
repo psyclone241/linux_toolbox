@@ -22,3 +22,6 @@ watch:
 
 watchquiet:
 	@python processwatch.py -q
+
+viewdata:
+	@python processwatch.py -m view_data
