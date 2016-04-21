@@ -16,10 +16,8 @@ class ProcessWatch:
         self.arg_parser = argparse.ArgumentParser()
         self.arg_parser.add_argument(
             "-c", "--config_file", help="Location of the configuration file")
-        # self.arg_parser.add_argument(
-        #     "-i", "--input", help="Which part of the project to extract?", default='project')
-        # self.arg_parser.add_argument(
-        #     "-m", "--method_to_use", help="Which method to use?", default='run_command')
+        self.arg_parser.add_argument(
+            "-m", "--method_to_use", help="Which method to use?", default='run_command')
         self.arg_parser.add_argument(
             "-q", "--quiet", help="Prevents output to the screen", action="store_true", default=False)
 
@@ -45,11 +43,13 @@ class ProcessWatch:
             'config_file': 'config.ini',
             'max_in_list': 5,
             'cpu_percent_interval': .25,
-            'database_file': 'processwatch.db'
+            'database_file': 'processwatch.db',
+            'view_data_limit': 30
         }
 
         # Collect any arguments passed to argparser
         self.quiet = self.args.quiet
+        self.method_to_use = self.args.method_to_use
 
         # Set the default for the configuration file
         if self.args.config_file:
@@ -113,19 +113,23 @@ class ProcessWatch:
             self.abs_round_memory_format = '%3.1f%s%s'
             self.other_round_memory_format = '%.1f%s%s'
             self.timestamp_format = '%Y-%m-%d %H:%M:%S'
-            # self.display_column_format = '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s'
             self.display_column_format = '{:s}\t{:s}\t{:s}\t{:s}\t{:s}\t{:s}\t{:s}\t{:s}'
+            self.display_column_format_with_time = '{:s}\t{:s}\t{:s}\t{:s}\t{:s}\t{:s}\t{:s}\t{:s}\t{:s}'
             self.display_pid_justification = 6
             self.display_user_justification = 15
             self.display_name_justification = 20
             self.display_rsscpu_justification = 10
+            self.display_time_justification = 10
 
     def main(self):
-        # Run the series of methods used to build and publish the process list
-        self.databaseSetup()
-        self.getProcessList()
-        self.readProcessList()
-        self.scoreProcessList()
+        if self.method_to_use == 'view_data':
+            self.viewData()
+        else:
+            # Run the series of methods used to build and publish the process list
+            self.databaseSetup()
+            self.getProcessList()
+            self.readProcessList()
+            self.scoreProcessList()
 
     def sendToTerminal(self, message):
         if not self.quiet:
@@ -166,6 +170,42 @@ class ProcessWatch:
                     screen_message = "Error in DB: {:s}".format((error_message))
                     self.sendToTerminal(screen_message)
                     exit()
+        finally:
+            if self.database_connection:
+                self.database_connection.close()
+
+    def viewData(self):
+        try:
+            self.database_connection = db.connect(self.database_file, isolation_level=None)
+            self.database_cursor = self.database_connection.cursor()
+            self.database_cursor.execute('SELECT * from ' + self.process_table + ' ORDER BY id DESC LIMIT ' + str(self.defaults['view_data_limit']))
+            process_data = self.database_cursor.fetchall()
+
+            header_column = self.display_column_format_with_time.format('Rank', 'PID'.ljust(self.display_pid_justification), 'PPID'.ljust(self.display_pid_justification), 'CUser'.ljust(self.display_user_justification), 'PUser'.ljust(self.display_user_justification), 'Name'.ljust(self.display_name_justification), 'RSS'.ljust(self.display_rsscpu_justification), 'CPU%'.ljust(self.display_rsscpu_justification), 'Time'.ljust(self.display_time_justification))
+            self.sendToTerminal(header_column)
+
+            if process_data:
+                for process in process_data:
+                    rss = self.sizeOf(process[1])
+                    cpu_percent = process[2]
+                    pid = process[3]
+                    ppid = process[4]
+                    username = process[5]
+                    name = process[6]
+                    cmd_line = process[7]
+                    rank = process[8]
+                    create_time = process[9]
+                    run_as = process[10]
+                    timestamp = process[11]
+
+                    row = self.display_column_format_with_time.format(str(rank), str(pid).ljust(self.display_pid_justification), str(ppid).ljust(self.display_pid_justification), run_as.ljust(self.display_user_justification), username.ljust(self.display_user_justification), name.ljust(self.display_name_justification), str(self.sizeOf(rss)).ljust(self.display_rsscpu_justification), str(cpu_percent).ljust(self.display_rsscpu_justification), timestamp.ljust(self.display_time_justification))
+                    self.sendToTerminal(row)
+
+
+        except db.Error, e:
+            error_message = e.args[0]
+            self.sendToTerminal(error_message)
+            exit()
         finally:
             if self.database_connection:
                 self.database_connection.close()
@@ -221,9 +261,9 @@ class ProcessWatch:
                         # First get the details of the process directly from the system
                         process_info = psutil.Process(pid)
                         process_info = process_info.as_dict()
-                        process_user = process_info['username']
+                        username = process_info['username']
                         ppid = process_info['ppid']
-                        command_line = json.dumps(process_info['cmdline'])
+                        cmd_line = json.dumps(process_info['cmdline'])
                         create_time = datetime.datetime.fromtimestamp(process_info['create_time']).strftime(self.timestamp_format)
 
                         # Independently grab the process a second time so as to get
@@ -231,14 +271,14 @@ class ProcessWatch:
                         # Read -> https://pythonhosted.org/psutil/#psutil.Process.cpu_percent
                         process_info = psutil.Process(pid)
                         cpu_percent = process_info.cpu_percent(interval=self.cpu_percent_interval)
-                        current_user = getpass.getuser()
+                        run_as = getpass.getuser()
 
                         # Print each row of data
-                        row = self.display_column_format.format(str(rank), str(pid).ljust(self.display_pid_justification), str(ppid).ljust(self.display_pid_justification), current_user.ljust(self.display_user_justification), process_user.ljust(self.display_user_justification), name.ljust(self.display_name_justification), str(self.sizeOf(rss)).ljust(self.display_rsscpu_justification), str(cpu_percent).ljust(self.display_rsscpu_justification))
+                        row = self.display_column_format.format(str(rank), str(pid).ljust(self.display_pid_justification), str(ppid).ljust(self.display_pid_justification), run_as.ljust(self.display_user_justification), username.ljust(self.display_user_justification), name.ljust(self.display_name_justification), str(self.sizeOf(rss)).ljust(self.display_rsscpu_justification), str(cpu_percent).ljust(self.display_rsscpu_justification))
                         self.sendToTerminal(row)
 
                         # Run an insert query to store this row in the database
-                        data = (rank, pid, ppid, current_user, process_user, name, rss, cpu_percent, command_line, timestamp, create_time)
+                        data = (rank, pid, ppid, run_as, username, name, rss, cpu_percent, cmd_line, timestamp, create_time)
                         self.database_cursor.execute("INSERT INTO " + self.process_table + "(rank, pid, ppid, run_as, username, name, rss, cpu_percent, cmdline, timestamp, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", data)
                     except psutil.NoSuchProcess:
                         pass
@@ -251,6 +291,7 @@ class ProcessWatch:
         except db.Error, e:
             error_message = e.args[0]
             self.sendToTerminal(error_message)
+            exit()
         finally:
             if self.database_connection:
                 self.database_connection.close()
