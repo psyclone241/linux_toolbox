@@ -30,6 +30,7 @@ Usage Instructions
 * To install the virtualenv environment, run `make setup`
 * Manually run, `python processwatch.py`
 * Or, use make, `make watch`
+* To view the last 30 entries, `make viewdata`
 
 Input data
 ----------

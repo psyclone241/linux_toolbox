@@ -8,6 +8,7 @@ help:
 	@echo "\tsetup - Run the virtualenv setup"
 	@echo "\twatch - Run the watch task"
 	@echo "\twatchquiet - Run the watch task in quiet mode"
+	@echo "\tviewdata - View the last 30 entries for now"
 
 config:
 	cp config.example.ini config.ini
