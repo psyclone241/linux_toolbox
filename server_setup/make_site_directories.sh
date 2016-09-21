@@ -15,7 +15,7 @@ chown -R ${SITE_OWNER} ${DOCUMENT_ROOT}/${SITE_PATH}
 chmod 775 ${DOCUMENT_ROOT}/${SITE_PATH}
 chmod g+s ${DOCUMENT_ROOT}/${SITE_PATH}
 
-if [ ! -z ${CREATE_INDEX} ];
+if [ ! -z "${CREATE_INDEX}" ];
 then
-    echo "Hello ${CREATE_INDEX}" > ${DOCUMENT_ROOT}/${SITE_PATH}/index.html
+    echo -e "Hello ${CREATE_INDEX}" > ${DOCUMENT_ROOT}/${SITE_PATH}/index.html
 fi
