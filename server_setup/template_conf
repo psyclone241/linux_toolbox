@@ -3,7 +3,7 @@
     <SERVER_ALIAS>
     ServerAdmin <SERVER_ADMIN>
 
-    DocumentRoot <DOCUMENT_ROOT>/<SERVER_NAME>/<SITE_DIRECTORY>
+    DocumentRoot <DOCUMENT_ROOT>/<DOMAIN_NAME>/<SITE_DIRECTORY>
 
     # Available loglevels: trace8, ..., trace1, debug, info, notice, warn,
     # error, crit, alert, emerg.
@@ -11,6 +11,6 @@
     # modules, e.g.
     #LogLevel info ssl:warn
 
-    ErrorLog ${APACHE_LOG_DIR}/<SERVER_NAME>/<SITE_DIRECTORY>/error.log
-    CustomLog ${APACHE_LOG_DIR}/<SERVER_NAME>/<SITE_DIRECTORY>/access.log combined
+    ErrorLog ${APACHE_LOG_DIR}/<DOMAIN_NAME>/<SITE_DIRECTORY>/error.log
+    CustomLog ${APACHE_LOG_DIR}/<DOMAIN_NAME>/<SITE_DIRECTORY>/access.log combined
 </VirtualHost>
